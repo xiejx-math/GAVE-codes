@@ -16,7 +16,7 @@ function [x,Out]=My_RK_GAVE(A,B,b,alpha,opts)
 %
 % Based on the manuscript:
 % [1] Jiaxin Xie, Houduo Qi, and Deren Han. Randomized iterative methods for generalized absolute value equations: Solvability and error bounds,
-%  arXiv:\
+%  https://arxiv.org/abs/2405.04091
 %
 % Coded by Jiaxin Xie, Beihang University, xiejx@buaa.edu.cn
 
