@@ -46,6 +46,13 @@ else
     TOL=10^-12;
 end
 
+%%%% dense or sparse data
+if (flag && isfield(opts,'sparse'))
+    sparsedata=opts.sparse;
+else
+    sparsedata=0;
+end
+
 %%%% setting the initial point
 if (flag && isfield(opts,'initial'))
     initialx=opts.initial;
@@ -82,7 +89,7 @@ end
 RSE(1)=error1;
 
 
-%% executing the AmRABK method
+%%%executing the AmRABK method
 stopc=0;
 iter=0;
 times(1)=toc;
@@ -90,10 +97,15 @@ while ~stopc
     tic
     iter=iter+1;
 
-    %%
-    x=(A-B*diag(sign(x)))\b;
+    %%%
+    if sparsedata
+        NewAB=A-B*sparse(diag(sign(x)));
+        x=NewAB\b;
+    else
+        x=(A-B*diag(sign(x)))\b;
+    end
 
-    %% stopping rule
+    %%% stopping rule
     if strategy
         error1=norm(x-xstar)^2/normxstar;
         RSE(iter+1)=error1;% RSE

@@ -1,6 +1,6 @@
-function [x,Out]=My_RABK_GAVE(A,B,b,alpha,ell,opts)
+function [x,Out]=My_RIMUS_GAVE(A,B,b,alpha,ell,opts)
 
-% Randomized average block Kaczmarz for solving GAVE
+% Randomized iterative method with uniform sampling  solving GAVE
 %              Ax-B|x|=b
 % we use a simple partitioning strategy for chosing the sampling matrix
 %
@@ -41,13 +41,6 @@ else
     TOL=10^-12;
 end
 
-%%%% dense or sparse data
-if (flag && isfield(opts,'sparse'))
-    sparsedata=opts.sparse;
-else
-    sparsedata=0;
-end
-
 %%%% setting the initial point
 if (flag && isfield(opts,'initial'))
     initialx=opts.initial;
@@ -84,57 +77,51 @@ end
 RSE(1)=error1;
 
 %% a uniform random permutation for both A and b
-if (flag && isfield(opts,'permS'))
-    S=opts.permS;
-    A=A(S,:);
-    B=B(S,:);
-    b=b(S);
-else
-    S=randperm(m);
-    A=A(S,:);
-    B=B(S,:);
-    b=b(S);
-end
+% if (flag && isfield(opts,'permS'))
+%     S=opts.permS;
+%     A=A(S,:);
+%     B=B(S,:);
+%     b=b(S);
+% else
+%     S=randperm(m);
+%     A=A(S,:);
+%     B=B(S,:);
+%     b=b(S);
+% end
 
 %% setting the probability
-if (flag && isfield(opts,'probset'))
-    probset=opts.probset;
-else
-    probset=0;
-end
-
-if probset
-    Aarrs=opts.Aarrs;
-    Barrs=opts.Barrs;
-    barrs=opts.barrs;
-    cumsumpro=opts.cumsumpro;
-else
-
-    %normAfro=norm(A,'fro')^2;
-    tau=floor(m/ell);
-    blockAnormfro=zeros(tau,1);
-    %prob=zeros(tau,1);
-    for i=1:tau
-        if i==tau
-            ps=((i-1)*ell+1):1:m;
-        else
-            ps=((i-1)*ell+1):1:(i*ell);
-        end
-        Aps=A(ps,:);
-        if sparsedata
-            blockAnormfro(i)=normest(A(ps,:),1.0e-4)^2;
-        else
-            blockAnormfro(i)=norm(A(ps,:))^2;
-        end
-        Aarrs{i}=Aps;
-        Barrs{i}=B(ps,:);
-        barrs{i}=b(ps);
-    end
-    prob=blockAnormfro/sum(blockAnormfro);
-    cumsumpro=cumsum(prob);
-end
-
-
+% if (flag && isfield(opts,'probset'))
+%     probset=opts.probset;
+% else
+%     probset=0;
+% end
+% 
+% if probset
+%     Aarrs=opts.Aarrs;
+%     Barrs=opts.Barrs;
+%     barrs=opts.barrs;
+%     cumsumpro=opts.cumsumpro;
+% else
+% 
+%     normAfro=norm(A,'fro')^2;
+%     tau=floor(m/ell);
+%     blockAnormfro=zeros(tau,1);
+%     %prob=zeros(tau,1);
+%     for i=1:tau
+%         if i==tau
+%             ps=((i-1)*ell+1):1:m;
+%         else
+%             ps=((i-1)*ell+1):1:(i*ell);
+%         end
+%         Aps=A(ps,:);
+%         blockAnormfro(i)=norm(A(ps,:),'fro')^2;
+%         Aarrs{i}=Aps;
+%         Barrs{i}=B(ps,:);
+%         barrs{i}=b(ps);
+%     end
+%     prob=blockAnormfro/normAfro;
+%     cumsumpro=cumsum(prob);
+% end
 
 %% executing the AmRABK method
 stopc=0;
@@ -145,12 +132,18 @@ while ~stopc
     iter=iter+1;
 
     %%
-    l=sum(cumsumpro<rand)+1;
-    AindexR=Aarrs{l};
-    BindexR=Barrs{l};
-    bindexR=barrs{l};
+
+    indexR=randperm(m,ell);
+    AindexR=A(indexR,:);
+    BindexR=B(indexR,:);
+    bindexR=b(indexR);
+    %l=sum(cumsumpro<rand)+1;
+    %AindexR=Aarrs{l};
+    %BindexR=Barrs{l};
+    %bindexR=barrs{l};
     Ax_Bx_b=AindexR*x-BindexR*abs(x)-bindexR;
-    x=x-alpha*AindexR'*Ax_Bx_b/blockAnormfro(l);
+    normAindexR=norm(AindexR);
+    x=x-alpha*AindexR'*Ax_Bx_b/normAindexR^2;
 
 %     %% Randomly select a sampling matrix S_k until $S_k(A*x_k − b) \neq 0$
 %     stopsampling=0;

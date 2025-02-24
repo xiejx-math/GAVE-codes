@@ -1,4 +1,4 @@
-function [x,Out]=My_RABK_GAVE(A,B,b,alpha,ell,opts)
+function [x,Out]=My_RABK1_GAVE(A,B,b,alpha,ell,opts)
 
 % Randomized average block Kaczmarz for solving GAVE
 %              Ax-B|x|=b
@@ -39,13 +39,6 @@ if (flag && isfield(opts,'TOL'))
     TOL=opts.TOL;
 else
     TOL=10^-12;
-end
-
-%%%% dense or sparse data
-if (flag && isfield(opts,'sparse'))
-    sparsedata=opts.sparse;
-else
-    sparsedata=0;
 end
 
 %%%% setting the initial point
@@ -121,11 +114,7 @@ else
             ps=((i-1)*ell+1):1:(i*ell);
         end
         Aps=A(ps,:);
-        if sparsedata
-            blockAnormfro(i)=normest(A(ps,:),1.0e-4)^2;
-        else
-            blockAnormfro(i)=norm(A(ps,:))^2;
-        end
+        blockAnormfro(i)=norm(A(ps,:))^2;
         Aarrs{i}=Aps;
         Barrs{i}=B(ps,:);
         barrs{i}=b(ps);
@@ -133,8 +122,6 @@ else
     prob=blockAnormfro/sum(blockAnormfro);
     cumsumpro=cumsum(prob);
 end
-
-
 
 %% executing the AmRABK method
 stopc=0;

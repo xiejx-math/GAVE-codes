@@ -1,6 +1,6 @@
 % This Matlab file is used to compare PIM, GNM, MAP,
 % and RABK with square matrices.
-% This file can reproduce Figure 2 in the manuscript
+% This file can reproduce Figure 3 in the manuscript
 
 clear
 close all
@@ -8,130 +8,141 @@ close all
 m1=1000;
 dense=1;
 run_time=20;
-Numbn=3;
+Numbn=10;
+
+kappaA=2;
+kappaB=1;
 
 CPUdata=zeros(4,Numbn);
+RK_CPU=zeros(run_time,Numbn);
+PIM_CPU=zeros(run_time,Numbn);
+MAP_CPU=zeros(run_time,Numbn);
+GNM_CPU=zeros(run_time,Numbn);
 
+RK_iter=zeros(run_time,Numbn);
+PIM_iter=zeros(run_time,Numbn);
+MAP_iter=zeros(run_time,Numbn);
+GNM_iter=zeros(run_time,Numbn);
 
 for jj=1:Numbn
     m=m1*jj;
     n=m;
-    r=min(m,n);
-    RK_CPU=zeros(run_time,1);
-    PIM_CPU=zeros(run_time,1);
-    MAP_CPU=zeros(run_time,1);
-    GNM_CPU=zeros(run_time,1);
-
-    RK_iter=zeros(run_time,1);
-    PIM_iter=zeros(run_time,1);
-    MAP_iter=zeros(run_time,1);
-    GNM_iter=zeros(run_time,1);
-
     for ii=1:run_time
-        if dense
-            B=randn(m,n);
-        else
-            B=eye(n);
-        end
-
-        [U,~]=qr(randn(m,r),0);
-        [V,~]=qr(randn(n,r),0);
-        sigmaA=norm(B)*eye(r)+diag(rand(r,1));
-        A=U*sigmaA*V';
-        clear U V sigmaA
+        [A,B]=getAB(m,n,2,kappaA,1,kappaB);
         x=randn(n,1);
         b=A*x-B*abs(x);
-
-        %%
         opts.xstar=x;
 
-
-        %% randomized Kaczmarz method
-
+        %%% randomized average block Kaczmarz with p=1 method
         alpha=1.0;
-        if dense
-            [xRK,OutRK]=My_RK_GAVE(A,B,b,alpha,opts);
-        else
-            [xRK,OutRK]=My_RK_AVE(A,b,alpha,opts);
-        end
+        [xRK,OutRK]=My_RK_GAVE(A,B,b,alpha,opts);
 
-        %% methods of alternating projections
+        %%% methods of alternating projections
         [xMAP,OutMAP]=My_MAP_GAVE(A,B,b,opts);
 
-        %% generialized Newton method
-        if dense
-            [xGNM,OutGNM]=My_GNM_GAVE(A,B,b,opts);
-        else
-            [xGNM,OutGNM]=My_GNM_AVE(A,b,opts);
-        end
+        %%% generialized Newton method
+        [xGNM,OutGNM]=My_GNM_GAVE(A,B,b,opts);
 
-
-        %% PIM method
+        %%% PIM method
         if dense
             [xPIM,OutPIM]=My_PIM_GAVE(A,B,b,opts);
         else
             [xPIM,OutPIM]=My_PIM_AVE(A,b,opts);
         end
 
-        %%
-        RK_CPU(ii)=OutRK.times(end);
-        PIM_CPU(ii)=OutPIM.times(end);
-        MAP_CPU(ii)=OutMAP.times(end);
-        GNM_CPU(ii)=OutGNM.times(end);
+        %%%
+        RK_CPU(ii,jj)=OutRK.times(end);
+        PIM_CPU(ii,jj)=OutPIM.times(end);
+        MAP_CPU(ii,jj)=OutMAP.times(end);
+        GNM_CPU(ii,jj)=OutGNM.times(end);
 
-        RK_iter(ii)=OutRK.iter;
-        PIM_iter(ii)=OutPIM.iter;
-        MAP_iter(ii)=OutMAP.iter;
-        GNM_iter(ii)=OutGNM.iter;
-        %%
-        fprintf('Average time =%d\n',ii)
+        RK_iter(ii,jj)=OutRK.iter;
+        PIM_iter(ii,jj)=OutPIM.iter;
+        MAP_iter(ii,jj)=OutMAP.iter;
+        GNM_iter(ii,jj)=OutGNM.iter;
+        %%%
+        fprintf('Average time =%d\n',ii);
     end
-
-    fprintf('m=%d \n',m)
-    fprintf('Iter and CPU: PIM, GNM, MAP, RK \n')
-    fprintf(' %4.2f&  %4.2f &  %4.2f &  %4.2f & %4.2f&  %4.2f &  %4.2f &  %4.2f\n',mean(PIM_iter),...
-        mean(PIM_CPU),mean(GNM_iter),mean(GNM_CPU),mean(MAP_iter),mean(MAP_CPU),...
-        mean(RK_iter),mean(RK_CPU))
-    CPUdata(1,jj)=mean(PIM_CPU);
-    CPUdata(2,jj)=mean(GNM_CPU);
-    CPUdata(3,jj)=mean(MAP_CPU);
-    CPUdata(4,jj)=mean(RK_CPU);
-
+    fprintf('m=%d \n',m);
+    fprintf('CPU: PIM, GNM, MAP, RK \n');
+    fprintf(' %4.2f&  %4.2f &  %4.2f &  %4.2f \n \n', mean(PIM_CPU(:,jj)),mean(GNM_CPU(:,jj)),...
+        mean(MAP_CPU(:,jj)),mean(RK_CPU(:,jj)));
 end
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%
+xlable=m1*[1:Numbn];
 
-x_label=m1*[1:Numbn];
+%%%
+y1=RK_CPU';
+miny1=min(y1');
+maxy1=max(y1');
+y1q25=quantile(y1,0.25,2);
+y1q75=quantile(y1,0.75,2);
 
+%%%
+y2=PIM_CPU';
+miny2=min(y2');
+maxy2=max(y2');
+y2q25=quantile(y2,0.25,2);
+y2q75=quantile(y2,0.75,2);
+
+
+%%%
+y3=MAP_CPU';
+miny3=min(y3');
+maxy3=max(y3');
+y3q25=quantile(y3,0.25,2);
+y3q75=quantile(y3,0.75,2);
+
+
+
+%%%
+y4=GNM_CPU';
+miny4=min(y4');
+maxy4=max(y4');
+y4q25=quantile(y4,0.25,2);
+y4q75=quantile(y4,0.75,2);
+
+%%%
 figure
-plot(x_label,CPUdata(1,:),'red', 'LineWidth', 1,...
-    'LineStyle', '-','Marker', 'o')
-
+h = fill([xlable  fliplr(xlable)], [miny2 fliplr(maxy2)],'blue','EdgeColor', 'none');
+set(h,'facealpha', .05)
 hold on
-plot(x_label,CPUdata(2,:),'blue', 'LineWidth', 1,...
-    'LineStyle', '-','Marker', 's')
-plot(x_label,CPUdata(3,:),'green', 'LineWidth', 1,...
-    'LineStyle', '-','Marker', '^')
-plot(x_label,CPUdata(4,:),'magenta', 'LineWidth', 1,...
-    'LineStyle', '-','Marker', 'x')
-ylabel('CPU')
-xlabel('The values of $n$','Interpreter', 'latex')
-legend('PIM','GNM','MAP','RABK','location', 'best')
+h = fill([xlable  fliplr(xlable)], [y2q25' fliplr(y2q75')],'blue','EdgeColor', 'none');
+set(h,'facealpha', .1)
+h = fill([xlable  fliplr(xlable)], [miny3 fliplr(maxy3)],'red','EdgeColor', 'none');
+set(h,'facealpha', .05)
+h = fill([xlable  fliplr(xlable)], [y3q25' fliplr(y3q75')],'red','EdgeColor', 'none');
+set(h,'facealpha', .1)
 
-figure
-semilogy(x_label,CPUdata(1,:),'red', 'LineWidth', 1,...
-    'LineStyle', '-','Marker', 'o')
+h = fill([xlable  fliplr(xlable)], [miny4 fliplr(maxy4)],'green','EdgeColor', 'none');
+set(h,'facealpha', .05)
+h = fill([xlable  fliplr(xlable)], [y4q25' fliplr(y4q75')],'green','EdgeColor', 'none');
+set(h,'facealpha', .1)
 
-hold on
-semilogy(x_label,CPUdata(2,:),'blue', 'LineWidth', 1,...
-    'LineStyle', '-','Marker', 's')
-semilogy(x_label,CPUdata(3,:),'green', 'LineWidth', 1,...
-    'LineStyle', '-','Marker', '^')
-semilogy(x_label,CPUdata(4,:),'magenta', 'LineWidth', 1,...
-    'LineStyle', '-','Marker', 'x')
-ylabel('CPU')
-xlabel('The values of $n$','Interpreter', 'latex')
-legend('PIM','GNM','MAP','RABK','location', 'best')
+h = fill([xlable  fliplr(xlable)], [miny1 fliplr(maxy1)],'magenta','EdgeColor', 'none');
+set(h,'facealpha', .05)
+h = fill([xlable  fliplr(xlable)], [y1q25' fliplr(y1q75')],'magenta','EdgeColor', 'none');
+set(h,'facealpha', .1)
+%%%
+p2=semilogy( xlable, median(y2'), 'blue', 'LineWidth', 1,...
+    'LineStyle', '-', 'Marker', 'o','DisplayName', 'RIMCS');
+p3=semilogy( xlable, median(y3'), 'red', 'LineWidth', 1,...
+    'LineStyle', '-', 'Marker', 's','DisplayName', 'RIMGS');
+p4=semilogy( xlable, median(y4'), 'green', 'LineWidth', 1,...
+    'LineStyle', '-', 'Marker', '^','DisplayName', 'RIMSRHT');
+
+p1=semilogy( xlable, median(y1'), 'magenta', 'LineWidth', 1,...
+    'LineStyle', '-','Marker', 'x', 'DisplayName', 'RABK');
+set(gca, 'YScale', 'log')
+ylabel('RSE','Interpreter', 'latex')
+xlabel('Number of iterations','Interpreter', 'latex')
+legend([ p2 p3 p4 p1],{'PIM','MAP','GNM','RABK'},'Interpreter', 'latex','location', 'best')
+txt=title(['$\kappa_A=$ ',num2str(kappaA),', $\kappa_B=$ ',num2str(kappaB)]);
+set(txt, 'Interpreter', 'latex');
+
 
 
 

@@ -1,6 +1,6 @@
-function [x,Out]=My_RABK_GAVE(A,B,b,alpha,ell,opts)
+function [x,Out]=My_RIMCS_GAVE(A,B,b,alpha,ell,opts)
 
-% Randomized average block Kaczmarz for solving GAVE
+% Randomized iterative method with Countsketch  solving GAVE
 %              Ax-B|x|=b
 % we use a simple partitioning strategy for chosing the sampling matrix
 %
@@ -84,59 +84,53 @@ end
 RSE(1)=error1;
 
 %% a uniform random permutation for both A and b
-if (flag && isfield(opts,'permS'))
-    S=opts.permS;
-    A=A(S,:);
-    B=B(S,:);
-    b=b(S);
-else
-    S=randperm(m);
-    A=A(S,:);
-    B=B(S,:);
-    b=b(S);
-end
+% if (flag && isfield(opts,'permS'))
+%     S=opts.permS;
+%     A=A(S,:);
+%     B=B(S,:);
+%     b=b(S);
+% else
+%     S=randperm(m);
+%     A=A(S,:);
+%     B=B(S,:);
+%     b=b(S);
+% end
 
 %% setting the probability
-if (flag && isfield(opts,'probset'))
-    probset=opts.probset;
-else
-    probset=0;
-end
+% if (flag && isfield(opts,'probset'))
+%     probset=opts.probset;
+% else
+%     probset=0;
+% end
+% 
+% if probset
+%     Aarrs=opts.Aarrs;
+%     Barrs=opts.Barrs;
+%     barrs=opts.barrs;
+%     cumsumpro=opts.cumsumpro;
+% else
+% 
+%     normAfro=norm(A,'fro')^2;
+%     tau=floor(m/ell);
+%     blockAnormfro=zeros(tau,1);
+%     %prob=zeros(tau,1);
+%     for i=1:tau
+%         if i==tau
+%             ps=((i-1)*ell+1):1:m;
+%         else
+%             ps=((i-1)*ell+1):1:(i*ell);
+%         end
+%         Aps=A(ps,:);
+%         blockAnormfro(i)=norm(A(ps,:),'fro')^2;
+%         Aarrs{i}=Aps;
+%         Barrs{i}=B(ps,:);
+%         barrs{i}=b(ps);
+%     end
+%     prob=blockAnormfro/normAfro;
+%     cumsumpro=cumsum(prob);
+% end
 
-if probset
-    Aarrs=opts.Aarrs;
-    Barrs=opts.Barrs;
-    barrs=opts.barrs;
-    cumsumpro=opts.cumsumpro;
-else
-
-    %normAfro=norm(A,'fro')^2;
-    tau=floor(m/ell);
-    blockAnormfro=zeros(tau,1);
-    %prob=zeros(tau,1);
-    for i=1:tau
-        if i==tau
-            ps=((i-1)*ell+1):1:m;
-        else
-            ps=((i-1)*ell+1):1:(i*ell);
-        end
-        Aps=A(ps,:);
-        if sparsedata
-            blockAnormfro(i)=normest(A(ps,:),1.0e-4)^2;
-        else
-            blockAnormfro(i)=norm(A(ps,:))^2;
-        end
-        Aarrs{i}=Aps;
-        Barrs{i}=B(ps,:);
-        barrs{i}=b(ps);
-    end
-    prob=blockAnormfro/sum(blockAnormfro);
-    cumsumpro=cumsum(prob);
-end
-
-
-
-%% executing the AmRABK method
+%% executing the RIMCS method
 stopc=0;
 iter=0;
 times(1)=toc;
@@ -145,49 +139,23 @@ while ~stopc
     iter=iter+1;
 
     %%
-    l=sum(cumsumpro<rand)+1;
-    AindexR=Aarrs{l};
-    BindexR=Barrs{l};
-    bindexR=barrs{l};
-    Ax_Bx_b=AindexR*x-BindexR*abs(x)-bindexR;
-    x=x-alpha*AindexR'*Ax_Bx_b/blockAnormfro(l);
 
-%     %% Randomly select a sampling matrix S_k until $S_k(A*x_k − b) \neq 0$
-%     stopsampling=0;
-%     while ~stopsampling
-%         l=sum(cumsumpro<rand)+1;
-%         AindexR=Aarrs{l};
-%         bindexR=barrs{l};
-%         Axb=AindexR*x-bindexR;
-%         normAxb=norm(Axb)^2;
-% 
-%         % If normAxb is greater than 10^(-16), we consider it to be equal to 0
-%         if normAxb>TOL1
-%             stopsampling=1;
-%             dk=AindexR'*Axb;
-%             norm_dk=norm(dk)^2;
-%         end
-%     end
-% 
-%     %% compute the x
-%     if iter==1
-%         alpha=normAxb/norm_dk;
-%         xold=x;
-%         %%%% update x for k=1
-%         x=x-alpha*dk;
-%     else
-%         x_xoold=x-xold;
-%         %normAxb=norm(Axb)^2;
-%         norm_x_xoold=norm(x_xoold)^2;
-%         dk_x_xoold=dk'*x_xoold;
-%         denomfm=norm_dk*norm_x_xoold-dk_x_xoold^2;
-%         alpha=(normAxb*norm_x_xoold)/denomfm;
-%         beta=(dk_x_xoold*normAxb)/denomfm;
-%         %%%% update x for k \geq 2
-%         xoold=xold;
-%         xold=x;
-%         x=x-alpha*dk+beta*(x-xoold);
-%     end
+    indexR=randperm(m,ell);
+    AindexR=A(indexR,:);
+    BindexR=B(indexR,:);
+    bindexR=b(indexR);
+
+    %[AindexR, BindexR, bindexR] = my_count_sketch(A, B, b, ell);
+  
+    Ax_Bx_b=AindexR*x-BindexR*abs(x)-bindexR;
+    if sparsedata
+        normAindexR=normest(AindexR,1.0e-4);
+    else
+        normAindexR=norm(AindexR);
+    end
+    
+    x=x-alpha*AindexR'*Ax_Bx_b/normAindexR^2;
+
 
     %% stopping rule
     if strategy

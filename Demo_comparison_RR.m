@@ -1,6 +1,6 @@
 % This Matlab file is used to compare PIM, GNM, MAP, 
 % and RABK for the asymmetric ridge regression.
-% This file can reproduce Figure 4 in the manuscript
+% This file can reproduce Figure 5 in the manuscript
 
 clear
 close all
@@ -9,7 +9,7 @@ m1=500;
 n=200;
 
 mu=500;
-lambda=0;
+lambda=200;
 
 run_time=20;
 
@@ -170,7 +170,7 @@ ylabel('CPU')
 xlabel('The values of $m$','Interpreter', 'latex')
 %legend('RABK','location', 'best')
 legend([p1 p2 p3,p4],{'PIM','GNM','MAP','RABK'},'Interpreter', 'latex','location', 'best')
-txt=title(['$n=$ ',num2str(n),',$\bar{\lambda}=$ ',num2str(lambda),',$\bar{\mu}=$',num2str(mu)]);
+txt=title(['$n=$ ',num2str(n),', $\bar{\lambda}=$ ',num2str(lambda),', $\bar{\mu}=$',num2str(mu)]);
 set(txt, 'Interpreter', 'latex');
 
 
@@ -212,7 +212,7 @@ max_val_in_plot = 1000000;
     minmax_colors, quant_colors, display_legend, max_val_in_plot);
 ylabel('Number of full iterations')
 xlabel('The values of $m$','Interpreter', 'latex')
-txt=title(['$n=$ ',num2str(n),',$\bar{\lambda}=$ ',num2str(lambda),',$\bar{\mu}=$',num2str(mu)]);
+txt=title(['$n=$ ',num2str(n),', $\bar{\lambda}=$ ',num2str(lambda),', $\bar{\mu}=$',num2str(mu)]);
 set(txt, 'Interpreter', 'latex');
 
 

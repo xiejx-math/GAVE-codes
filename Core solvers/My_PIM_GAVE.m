@@ -80,7 +80,7 @@ if ~strategy
 end
 
 RSE(1)=error1;
-[L,U,P] = lu(A);
+%[L,U,P] = lu(A);
 
 %% executing the AmRABK method
 stopc=0;
@@ -92,9 +92,9 @@ while ~stopc
 
     %%
     %xold=x;
-    y = L\(P*(B*abs(x)+b));
-    x = U\y;
-    %x=A\(B*abs(x)+b);
+    %y = L\(P*(B*abs(x)+b));
+    %x = U\y;
+    x=A\(B*abs(x)+b);
 
     %% stopping rule
     if strategy

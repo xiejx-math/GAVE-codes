@@ -41,6 +41,13 @@ else
     TOL=10^-12;
 end
 
+%%%% dense or sparse data
+if (flag && isfield(opts,'sparse'))
+    sparsedata=opts.sparse;
+else
+    sparsedata=0;
+end
+
 %%%% setting the initial point
 if (flag && isfield(opts,'initial'))
     initialx=opts.initial;
@@ -81,8 +88,11 @@ w=[x;x];
 T=[A-B -A-B];
 sqrt2c=sqrt(2)*b;
 
-pinvT=pinv(T);
-
+if sparsedata
+    [U, S, V] = svd(T, 'econ');
+else
+    pinvT=pinv(T);
+end
 %S=2*(A*A'+B*B');
 %dS=decomposition(S,'chol');
 
@@ -98,7 +108,17 @@ while ~stopc
 
     %%
     w=projectionC2(w);
-    w=w-pinvT*(T*w-sqrt2c);
+    if sparsedata
+        %w=w-T\(T*w-sqrt2c);
+        %norm(lsqminnorm(T,T*w-sqrt2c)-R(1:n,1:n)\(Q'*(T*w-sqrt2c)))
+        %xxx(p,:) = R\(Q\(T*w-sqrt2c));
+        
+        w=w-lsqminnorm(T,T*w-sqrt2c);
+       % w=w-R\(Q'*(T*w-sqrt2c));
+       norm(www-w)
+    else
+        w=w-pinvT*(T*w-sqrt2c);
+    end
     x=1/sqrt(2)*(w(1:n)-w(n+1:2*n));
 
     %% stopping rule

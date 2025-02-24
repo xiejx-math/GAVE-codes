@@ -1,11 +1,14 @@
 % This Matlab file is used to explore the influence of the block size
-% This file can reproduce Figure 1 in the manuscript
+% This file can reproduce Figure 2 in the manuscript
 
 clear
 close all
 
 ss=9;
 m=2^ss;
+kappaA=2;
+kappaB=10;
+
 
 
 %%
@@ -24,12 +27,17 @@ RABKiter256=zeros(run_time,k_time);
 for ii=1:k_time
     ell=2^(setvaluep(ii));
     for jj=1:run_time
-        B=randn(m,n);
+        %%
+        %B=randn(m,n);
         %B=eye(n);
-        [U,~]=qr(randn(m,r),0);
-        [V,~]=qr(randn(n,r),0);
-        sigmaA=norm(B)*eye(r)+diag(rand(r,1));
-        A=U*sigmaA*V';
+        %[U,~]=qr(randn(m,r),0);
+        %[V,~]=qr(randn(n,r),0);
+        %sigmaA=norm(B)*eye(r)+diag(rand(r,1));
+        %A=U*sigmaA*V';
+        %%%
+        [A,B]=getAB(m,n,2,kappaA,1,kappaB);
+
+        %%%
         x=randn(n,1);
         b=A*x-B*abs(x);
 
@@ -58,12 +66,15 @@ RABKiter512=zeros(run_time,k_time);
 for ii=1:k_time
     ell=2^(setvaluep(ii));
     for jj=1:run_time
-        B=randn(m,n);
+        %B=randn(m,n);
         %B=eye(n);
-        [U,~]=qr(randn(m,r),0);
-        [V,~]=qr(randn(n,r),0);
-        sigmaA=norm(B)*eye(r)+diag(rand(r,1));
-        A=U*sigmaA*V';
+        %[U,~]=qr(randn(m,r),0);
+        %[V,~]=qr(randn(n,r),0);
+        %sigmaA=norm(B)*eye(r)+diag(rand(r,1));
+        %A=U*sigmaA*V';
+
+        %%%
+        [A,B]=getAB(m,n,2,kappaA,1,kappaB);
         x=randn(n,1);
         b=A*x-B*abs(x);
 
@@ -90,12 +101,17 @@ RABKiter1024=zeros(run_time,k_time);
 for ii=1:k_time
     ell=2^(setvaluep(ii));
     for jj=1:run_time
-        B=randn(m,n);
+        %B=randn(m,n);
         %B=eye(n);
-        [U,~]=qr(randn(m,r),0);
-        [V,~]=qr(randn(n,r),0);
-        sigmaA=norm(B)*eye(r)+diag(rand(r,1));
-        A=U*sigmaA*V';
+        %[U,~]=qr(randn(m,r),0);
+        %[V,~]=qr(randn(n,r),0);
+        %sigmaA=norm(B)*eye(r)+diag(rand(r,1));
+        %A=U*sigmaA*V';
+
+        %%%
+        [A,B]=getAB(m,n,2,kappaA,1,kappaB);
+
+        %%%
         x=randn(n,1);
         b=A*x-B*abs(x);
 
@@ -176,7 +192,8 @@ ylabel('CPU')
 xlabel('$\log_2(p)$','Interpreter', 'latex')
 %legend('RABK','location', 'best')
 legend([p1 p2 p3],{'RABK $n=128$','RABK $n=256$','RABK $n=512$'},'Interpreter', 'latex','location', 'best')
-txt=title(['{\tt randn}',',$m=$ ',num2str(m)]);
+%txt=title(['{\tt randn}',',$m=$ ',num2str(m)]);
+txt=title(['$m=$ ',num2str(m),', $\kappa_A=$ ',num2str(kappaA),', $\kappa_B=$ ',num2str(kappaB)]);
 set(txt, 'Interpreter', 'latex');
 
 %%
@@ -226,5 +243,6 @@ p3=semilogy( xlable, median(y3'), 'green', 'LineWidth', 1,...
 ylabel('$k\cdot \frac{p}{m}$','Interpreter', 'latex')
 xlabel('$\log_2(p)$','Interpreter', 'latex')
 legend([p1 p2 p3],{'RABK $n=128$','RABK $n=256$','RABK $n=512$'},'Interpreter', 'latex','location', 'best')
-txt=title(['{\tt randn}',',$m=$ ',num2str(m)]);
+%txt=title(['{\tt randn}',',$m=$ ',num2str(m)]);
+txt=title(['$m=$ ',num2str(m),', $\kappa_A=$ ',num2str(kappaA),', $\kappa_B=$ ',num2str(kappaB)]);
 set(txt, 'Interpreter', 'latex');
